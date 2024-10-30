@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # Create Spark context.
     conf = SparkConf()
     sc = SparkContext(conf=conf)
-    sc.setCheckpointDir('checkpoint')
+    # sc.setCheckpointDir('checkpoint')
     lines = sc.textFile(sys.argv[1])
 
     # Start timing
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # Set damping factor and number of iterations
     d = 0.8
-    num_iterations = 25
+    num_iterations = 50
 
     # Run PageRank iterations
     for i in range(num_iterations):
@@ -41,15 +41,7 @@ if __name__ == "__main__":
         
         # Recalculate ranks based on damping factor
         ranks = contribs.reduceByKey(lambda x, y: x + y).mapValues(lambda rank: (1 - d) + d * rank)
-    ranks.checkpoint()
-    for i in range(num_iterations):
-        # Calculate each node's contribution to the rank of its neighbors
-        contribs = links.join(ranks).flatMap(
-            lambda node_neighbors_rank: compute_contribs(node_neighbors_rank[1][0], node_neighbors_rank[1][1])
-        )
-        
-        # Recalculate ranks based on damping factor
-        ranks = contribs.reduceByKey(lambda x, y: x + y).mapValues(lambda rank: (1 - d) + d * rank)
+    # ranks.checkpoint()
 
     # Collect top 5 nodes by rank
     top_5 = ranks.takeOrdered(5, key=lambda x: -x[1])
